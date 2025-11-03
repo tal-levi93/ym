@@ -49,6 +49,31 @@ function Home() {
         </div>
       </section>
 
+      {/* About Us Section */}
+      <section className="section about-section" aria-labelledby="about-title">
+        <div className="section-header">
+          <h2 id="about-title">קצת עלינו</h2>
+        </div>
+        <div className="about-content">
+          <div className="about-card">
+            <h3>טל לוי</h3>
+            <p className="about-role">מהנדס תוכנה</p>
+            <div className="about-details">
+              <p>
+                מהנדס תוכנה בן 32 עם 7 שנות ניסיון ומומחיות בתחום האפליקציות ווב. 
+                מתמחה בפיתוח פתרונות דיגיטליים מתקדמים, יצירת אתרים מודרניים ומערכות אוטומציה חכמות 
+                שמיועדות להקל על תהליכים עסקיים ולשפר את היעילות הארגונית.
+              </p>
+              <p>
+                עם גישה מקצועית ומחויבות למצוינות, כל פרויקט מתבצע תוך הקפדה על איכות גבוהה, 
+                זמני אספקה מדויקים ותמיכה מתמשכת. המטרה שלנו היא לספק פתרונות טכנולוגיים 
+                שעונים בדיוק על הצרכים הייחודיים של כל לקוח ולסייע לעסקים להצליח בעידן הדיגיטלי.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Project Showcase Section */}
       <section className="section projects-showcase" aria-labelledby="projects-title">
         <div className="section-header">
