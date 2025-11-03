@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import '../App.css'
 
 function ProjectGrid() {
   const [hoveredVideo, setHoveredVideo] = useState(null)
+  const videoRefs = useRef({})
 
   // Placeholder videos - these can be replaced with actual video URLs later
   const projects = [
@@ -10,30 +11,37 @@ function ProjectGrid() {
       id: 1,
       title: 'פרויקט אוטומציה',
       description: 'מערכת אוטומציה מתקדמת לניהול תהליכים עסקיים',
-      videoUrl: '', // Placeholder - will be replaced with actual video
+      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762186648/Screen_Recording_2025-11-03_181151_wp1ums.mp4',
     },
     {
       id: 2,
       title: 'אתר תדמית',
       description: 'אתר תדמית מקצועי עם עיצוב מודרני',
-      videoUrl: '', // Placeholder - will be replaced with actual video
+      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762187807/Screen_Recording_2025-11-03_183456_zp1wjz.mp4',
     },
     {
       id: 3,
       title: 'פלטפורמת מסחר',
       description: 'פלטפורמת מסחר אלקטרוני מתקדמת',
-      videoUrl: '', // Placeholder - will be replaced with actual video
+      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762188879/Screen_Recording_2025-11-03_185338_pqcwy1.mp4',
     },
   ]
 
   const handleMouseEnter = (id) => {
     setHoveredVideo(id)
-    // If there's a video URL, play it
-    // For now, just highlight the card
+    // Play video if it exists
+    if (videoRefs.current[id]) {
+      videoRefs.current[id].play()
+    }
   }
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (id) => {
     setHoveredVideo(null)
+    // Stop and reset video if it exists
+    if (videoRefs.current[id]) {
+      videoRefs.current[id].pause()
+      videoRefs.current[id].currentTime = 0
+    }
   }
 
   return (
@@ -41,18 +49,18 @@ function ProjectGrid() {
       {projects.map((project) => (
         <div
           key={project.id}
-          className="project-card"
+          className={`project-card ${hoveredVideo === project.id ? 'hovered' : ''}`}
           onMouseEnter={() => handleMouseEnter(project.id)}
-          onMouseLeave={handleMouseLeave}
+          onMouseLeave={() => handleMouseLeave(project.id)}
         >
           <div className="project-video-placeholder">
             {project.videoUrl ? (
               <video
+                ref={(el) => (videoRefs.current[project.id] = el)}
                 src={project.videoUrl}
                 muted
                 loop
                 playsInline
-                autoPlay={hoveredVideo === project.id}
                 className="project-video"
               />
             ) : (

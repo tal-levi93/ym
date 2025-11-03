@@ -1,22 +1,14 @@
 import '../App.css'
 import ProjectGrid from '../components/ProjectGrid'
+import heroImage from '../assets/Designer.png'
 
 function Home() {
   return (
     <main id="main-content">
       {/* Hero Section */}
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-image-placeholder"></div>
-        <div className="hero-content">
-          <p className="eyebrow">פתרונות דיגיטליים מתקדמים</p>
-          <h1 id="hero-title">
-            אוטומציה ויצירת אתרים מקצועיים
-          </h1>
-          <p className="lead">
-            אנו מספקים שירותי אוטומציה עסקית ופיתוח אתרים מתקדמים. 
-            צוות מומחים שלנו יוצר פתרונות דיגיטליים מותאמים אישית 
-            המסייעים לעסקים לשפר את התהליכים שלהם ולהגדיל את הנוכחות המקוונת.
-          </p>
+      <section className="hero">
+        <div className="hero-image-container">
+          <img src={heroImage} alt="" className="hero-image" />
         </div>
       </section>
 

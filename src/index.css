@@ -1,13 +1,13 @@
 ﻿:root {
-  --color-bg: #f1f5f9;
+  --color-bg: #f5f7fa;
   --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-muted: #475569;
-  --color-accent: #2563eb;
-  --color-accent-dark: #1d4ed8;
+  --color-text: #1a1f2e;
+  --color-muted: #5a6578;
+  --color-accent: #4a5568;
+  --color-accent-dark: #2d3748;
   --color-border: #e2e8f0;
-  --shadow-lg: 0 24px 48px -24px rgba(15, 23, 42, 0.35);
-  --shadow-sm: 0 10px 30px -20px rgba(15, 23, 42, 0.3);
+  --shadow-lg: 0 24px 48px -24px rgba(26, 31, 46, 0.25);
+  --shadow-sm: 0 10px 30px -20px rgba(26, 31, 46, 0.2);
   --max-width: 1120px;
   font-family: 'Assistant', 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.7;
@@ -52,17 +52,17 @@ img {
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-accent-dark);
   text-decoration-thickness: 0.1em;
 }
 
 a:hover {
-  color: var(--color-accent-dark);
+  color: var(--color-accent);
 }
 
 a:focus-visible,
 button:focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-accent-dark);
   outline-offset: 3px;
 }
 
