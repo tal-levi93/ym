@@ -2,7 +2,8 @@
 import './App.css'
 import Header from './components/Header'
 import Home from './pages/Home'
-import Projects from './pages/Projects'
+import Services from './pages/Services'
+import FAQ from './pages/FAQ'
 import Contact from './pages/Contact'
 
 function App() {
@@ -12,7 +13,8 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/projects" element={<Projects />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>
         <footer className="site-footer" role="contentinfo">

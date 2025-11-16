@@ -1,51 +1,8 @@
 import '../App.css'
+import { projectsData } from '../data/projects'
 
 function Projects() {
-  // Placeholder projects - can be replaced with actual data later
-  const allProjects = [
-    {
-      id: 1,
-      title: 'מערכת אוטומציה לניהול מלאי',
-      description: 'פתרון מתקדם לניהול אוטומטי של מלאי ומעקב אחר מוצרים',
-      category: 'אוטומציה',
-      image: null, // Placeholder
-    },
-    {
-      id: 2,
-      title: 'אתר תדמית לעסק קטן',
-      description: 'אתר תדמית מקצועי עם עיצוב מודרני ונוח לנייד',
-      category: 'אתרים',
-      image: null,
-    },
-    {
-      id: 3,
-      title: 'פלטפורמת מסחר אלקטרוני',
-      description: 'מערכת מסחר מקוונת מתקדמת עם תשלומים מאובטחים',
-      category: 'אתרים',
-      image: null,
-    },
-    {
-      id: 4,
-      title: 'אוטומציה לניהול לקוחות',
-      description: 'מערכת CRM מותאמת אישית עם תהליכי עבודה אוטומטיים',
-      category: 'אוטומציה',
-      image: null,
-    },
-    {
-      id: 5,
-      title: 'אתר חברה גדולה',
-      description: 'אתר תדמית מורכב עם מערכת ניהול תוכן',
-      category: 'אתרים',
-      image: null,
-    },
-    {
-      id: 6,
-      title: 'אוטומציה לתהליכי ייצור',
-      description: 'פתרון אוטומציה מותאם לתעשייה ספציפית',
-      category: 'אוטומציה',
-      image: null,
-    },
-  ]
+  const allProjects = projectsData
 
   return (
     <main id="main-content">
@@ -61,7 +18,15 @@ function Projects() {
           {allProjects.map((project) => (
             <article key={project.id} className="project-card-full">
               <div className="project-image-placeholder">
-                {project.image ? (
+                {project.videoUrl ? (
+                  <video
+                    src={project.videoUrl}
+                    muted
+                    loop
+                    playsInline
+                    className="project-video-thumbnail"
+                  />
+                ) : project.image ? (
                   <img src={project.image} alt={project.title} />
                 ) : (
                   <div className="project-placeholder-content">
@@ -73,6 +38,16 @@ function Projects() {
                 <span className="project-category-badge">{project.category}</span>
                 <h2>{project.title}</h2>
                 <p>{project.description}</p>
+                {project.technologies && project.technologies.length > 0 && (
+                  <div className="project-technologies">
+                    {project.technologies.map((tech, index) => (
+                      <span key={index} className="tech-tag">{tech}</span>
+                    ))}
+                  </div>
+                )}
+                {project.year && (
+                  <span className="project-year">{project.year}</span>
+                )}
               </div>
             </article>
           ))}

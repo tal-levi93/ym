@@ -1,31 +1,13 @@
 import { useState, useRef } from 'react'
 import '../App.css'
+import { getFeaturedProjects } from '../data/projects'
 
 function ProjectGrid() {
   const [hoveredVideo, setHoveredVideo] = useState(null)
   const videoRefs = useRef({})
 
-  // Placeholder videos - these can be replaced with actual video URLs later
-  const projects = [
-    {
-      id: 1,
-      title: 'פרויקט אוטומציה',
-      description: 'מערכת אוטומציה מתקדמת לניהול תהליכים עסקיים',
-      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762186648/Screen_Recording_2025-11-03_181151_wp1ums.mp4',
-    },
-    {
-      id: 2,
-      title: 'אתר תדמית',
-      description: 'אתר תדמית מקצועי עם עיצוב מודרני',
-      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762187807/Screen_Recording_2025-11-03_183456_zp1wjz.mp4',
-    },
-    {
-      id: 3,
-      title: 'פלטפורמת מסחר',
-      description: 'פלטפורמת מסחר אלקטרוני מתקדמת',
-      videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762188879/Screen_Recording_2025-11-03_185338_pqcwy1.mp4',
-    },
-  ]
+  // Get featured projects (those with videos or marked as featured)
+  const projects = getFeaturedProjects()
 
   const handleMouseEnter = (id) => {
     setHoveredVideo(id)

@@ -6,10 +6,13 @@ function Contact() {
     name: '',
     email: '',
     phone: '',
+    businessName: '',
     message: '',
   })
   const [errors, setErrors] = useState({})
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -43,20 +46,46 @@ function Contact() {
       newErrors.phone = 'שדה חובה'
     }
 
-    if (!formData.message.trim()) {
-      newErrors.message = 'שדה חובה'
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setSubmitError('')
+    
     if (validateForm()) {
-      // Here you would typically send the form data to a backend
-      // For now, we'll just show the success message
-      setIsSubmitted(true)
+      setIsSubmitting(true)
+      
+      try {
+        const response = await fetch('https://hook.eu1.make.com/js7mnmelija472itsjkyxor78ykxbubm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            Lead: formData.name,
+            Status: 'New lead',
+            Company: formData.businessName || '-',
+            Email: formData.email,
+            phone: formData.phone,
+            'Last interaction': new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Jerusalem' }),
+            'Deal Value': '-',
+            Message: formData.message,
+          }),
+        })
+        
+        if (response.ok) {
+          setIsSubmitted(true)
+        } else {
+          throw new Error('שגיאה בשליחת הטופס')
+        }
+      } catch (error) {
+        console.error('Error submitting form:', error)
+        setSubmitError('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.')
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -128,7 +157,19 @@ function Contact() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="message">הודעה *</label>
+              <label htmlFor="businessName">שם עסק</label>
+              <input
+                type="text"
+                id="businessName"
+                name="businessName"
+                value={formData.businessName}
+                onChange={handleChange}
+                placeholder="הזן את שם העסק"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="message">הודעה</label>
               <textarea
                 id="message"
                 name="message"
@@ -141,8 +182,14 @@ function Contact() {
               {errors.message && <span className="error-message">{errors.message}</span>}
             </div>
 
-            <button type="submit" className="button primary">
-              שלח הודעה
+            {submitError && (
+              <div className="error-message" style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                {submitError}
+              </div>
+            )}
+
+            <button type="submit" className="button primary" disabled={isSubmitting}>
+              {isSubmitting ? 'שולח...' : 'שלח הודעה'}
             </button>
           </form>
         </div>
