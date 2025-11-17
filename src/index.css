@@ -61,9 +61,52 @@ a:hover {
 }
 
 a:focus-visible,
-button:focus-visible {
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
   outline: 3px solid var(--color-accent-dark);
   outline-offset: 3px;
+  outline-style: solid;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Enhanced focus indicators for interactive elements */
+.project-video-placeholder:focus-visible,
+.project-image-placeholder:focus-visible {
+  outline: 3px solid var(--color-accent-dark);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+.site-nav a:focus-visible {
+  outline: 3px solid var(--color-accent-dark);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+.video-modal-close:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+/* Skip link focus */
+.skip-link:focus {
+  transform: translateY(0);
+  z-index: 10000;
 }
 
 p {

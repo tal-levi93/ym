@@ -1,14 +1,34 @@
 import '../App.css'
 import ProjectGrid from '../components/ProjectGrid'
+import SEO from '../components/SEO'
+import { getLocalBusinessStructuredData, getWebSiteStructuredData, getPersonStructuredData } from '../utils/structuredData'
 import heroImage from '../assets/Designer.png'
 
 function Home() {
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  
+  // Combine multiple structured data objects
+  const structuredData = [
+    getLocalBusinessStructuredData(),
+    getWebSiteStructuredData(),
+    getPersonStructuredData(),
+  ]
+
   return (
-    <main id="main-content">
+    <>
+      <SEO
+        title="אוטומציה ויצירת אתרים | שירותים מקצועיים"
+        description="פתרונות אוטומציה ויצירת אתרים מקצועיים. אנו מספקים שירותי פיתוח אתרים, אוטומציה עסקית ותכנון דיגיטלי מתקדם. מהנדס תוכנה עם 7 שנות ניסיון."
+        keywords="אוטומציה עסקית, פיתוח אתרים, יצירת אתרים, מערכות CRM, אוטומציה, פיתוח תוכנה, אתרים מותאמים אישית, פתרונות דיגיטליים, טל לוי, מהנדס תוכנה"
+        canonical={`${siteUrl}/`}
+        ogImage={`${siteUrl}/favicon.png`}
+        structuredData={structuredData}
+      />
+      <main id="main-content">
       {/* Hero Section */}
-      <section className="hero">
+      <section className="hero" aria-label="תמונה ראשית">
         <div className="hero-image-container">
-          <img src={heroImage} alt="" className="hero-image" />
+          <img src={heroImage} alt="תמונת רקע של פתרונות דיגיטליים" className="hero-image" />
         </div>
       </section>
 
@@ -86,6 +106,7 @@ function Home() {
         <ProjectGrid />
       </section>
     </main>
+    </>
   )
 }
 

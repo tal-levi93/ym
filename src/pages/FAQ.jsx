@@ -1,7 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import '../App.css'
+import SEO from '../components/SEO'
+import { getFAQStructuredData, getOrganizationStructuredData } from '../utils/structuredData'
 
 function FAQ() {
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  
   const faqCategories = [
     {
       category: 'שירותים כלליים',
@@ -68,8 +72,24 @@ function FAQ() {
     },
   ]
 
+  // Flatten all FAQs for structured data
+  const allFAQs = faqCategories.flatMap(category => category.questions)
+  const structuredData = [
+    getOrganizationStructuredData(),
+    getFAQStructuredData(allFAQs),
+  ]
+
   return (
-    <main id="main-content">
+    <>
+      <SEO
+        title="שאלות נפוצות | אוטומציה ויצירת אתרים"
+        description="תשובות לשאלות הנפוצות על שירותי פיתוח אתרים, מערכות CRM ואוטומציה עסקית. כל מה שאתה צריך לדעת על השירותים שלנו."
+        keywords="שאלות נפוצות, FAQ, תשובות, פיתוח אתרים, CRM, אוטומציה, שאלות ותשובות"
+        canonical={`${siteUrl}/faq`}
+        ogImage={`${siteUrl}/favicon.png`}
+        structuredData={structuredData}
+      />
+      <main id="main-content">
       <section className="section faq-page" aria-labelledby="faq-page-title">
         <div className="section-header">
           <h1 id="faq-page-title">שאלות נפוצות</h1>
@@ -83,12 +103,12 @@ function FAQ() {
           {faqCategories.map((category, categoryIndex) => (
             <div key={categoryIndex} className="faq-category">
               <h2 className="faq-category-title">{category.category}</h2>
-              <div className="faq-list">
+              <div className="faq-list" role="list">
                 {category.questions.map((item, index) => (
-                  <details key={index} className="faq-item">
-                    <summary className="faq-question">
+                  <details key={index} className="faq-item" role="listitem">
+                    <summary className="faq-question" aria-expanded="false">
                       <span>{item.question}</span>
-                      <span className="faq-icon">+</span>
+                      <span className="faq-icon" aria-hidden="true">+</span>
                     </summary>
                     <div className="faq-answer">
                       <p>{item.answer}</p>
@@ -108,6 +128,7 @@ function FAQ() {
         </div>
       </section>
     </main>
+    </>
   )
 }
 

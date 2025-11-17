@@ -5,23 +5,31 @@ import '../App.css'
 function Header() {
   return (
     <header className="site-header" role="banner">
-      <div className="brand">
-        <img src={logo} alt="לוגו החברה" className="brand-logo" />
+      <a href="/" className="brand" aria-label="דף הבית - YM-TECH פתרונות דיגיטליים">
+        <img src={logo} alt="לוגו YM-TECH פתרונות דיגיטליים" className="brand-logo" />
         <span className="brand-text">YM-TECH | פתרונות דיגיטליים</span>
-      </div>
-      <nav className="site-nav" aria-label="Primary">
-        <ul>
-          <li>
-            <NavLink to="/" end>בית</NavLink>
+      </a>
+      <nav className="site-nav" aria-label="ניווט ראשי">
+        <ul role="menubar">
+          <li role="none">
+            <NavLink to="/" end role="menuitem" aria-label="עבור לדף הבית">
+              בית
+            </NavLink>
           </li>
-          <li>
-            <NavLink to="/services">שירותים</NavLink>
+          <li role="none">
+            <NavLink to="/services" role="menuitem" aria-label="עבור לעמוד השירותים">
+              שירותים
+            </NavLink>
           </li>
-          <li>
-            <NavLink to="/faq">שאלות נפוצות</NavLink>
+          <li role="none">
+            <NavLink to="/faq" role="menuitem" aria-label="עבור לעמוד השאלות הנפוצות">
+              שאלות נפוצות
+            </NavLink>
           </li>
-          <li>
-            <NavLink to="/contact">צור קשר</NavLink>
+          <li role="none">
+            <NavLink to="/contact" role="menuitem" aria-label="עבור לעמוד יצירת קשר">
+              צור קשר
+            </NavLink>
           </li>
         </ul>
       </nav>

@@ -1,6 +1,18 @@
 import '../App.css'
+import SEO from '../components/SEO'
+import { getServiceStructuredData, getOrganizationStructuredData } from '../utils/structuredData'
 
 function Services() {
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  
+  const structuredData = [
+    getOrganizationStructuredData(),
+    getServiceStructuredData(
+      'שירותי אוטומציה ופיתוח אתרים',
+      'פיתוח אתרים מותאמים אישית, מערכות ניהול לקוחות, אוטומציה עסקית וחיבור בין מערכות'
+    ),
+  ]
+
   const services = [
     {
       id: 1,
@@ -89,6 +101,15 @@ function Services() {
   ]
 
   return (
+    <>
+      <SEO
+        title="השירותים שלנו | אוטומציה ויצירת אתרים"
+        description="שירותי פיתוח אתרים מותאמים אישית, מערכות ניהול לקוחות (CRM), אוטומציה עסקית וחיבור בין מערכות. פתרונות מותאמים אישית לעסק שלך."
+        keywords="שירותי פיתוח אתרים, מערכות CRM, אוטומציה עסקית, חיבור מערכות, תמיכה טכנית, הדרכה ותיעוד, פתרונות דיגיטליים מותאמים אישית"
+        canonical={`${siteUrl}/services`}
+        ogImage={`${siteUrl}/favicon.png`}
+        structuredData={structuredData}
+      />
     <main id="main-content">
       <section className="section services-page" aria-labelledby="services-page-title">
         <div className="section-header">
@@ -154,6 +175,7 @@ function Services() {
         </div>
       </section>
     </main>
+    </>
   )
 }
 
