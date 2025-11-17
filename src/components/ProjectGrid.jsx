@@ -11,6 +11,11 @@ function ProjectGrid() {
 
   // Get featured projects (those with videos or marked as featured)
   const projects = getFeaturedProjects()
+  
+  // Debug: Log projects to console
+  if (typeof window !== 'undefined' && projects.length === 0) {
+    console.warn('No featured projects found')
+  }
 
   const handleMouseEnter = (id) => {
     setHoveredVideo(id)
