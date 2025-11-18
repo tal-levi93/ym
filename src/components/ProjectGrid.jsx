@@ -23,13 +23,26 @@ function ProjectGrid() {
     return typeof window !== 'undefined' && window.innerWidth <= 900
   }
 
-  const handleMouseEnter = (id) => {
+  const handleMouseEnter = async (id) => {
     // Only auto-play on hover for desktop (non-mobile)
     if (!isMobile()) {
       setHoveredVideo(id)
       // Play video if it exists
-      if (videoRefs.current[id]) {
-        videoRefs.current[id].play()
+      const video = videoRefs.current[id]
+      if (video) {
+        // Ensure video is muted for autoplay policy compliance
+        video.muted = true
+        // Ensure video has enough data loaded
+        if (video.readyState < 2) {
+          video.load()
+        }
+        // Attempt to play and handle promise rejection
+        try {
+          await video.play()
+        } catch (error) {
+          // Autoplay was prevented, but video should still be visible
+          console.debug('Video autoplay prevented:', error)
+        }
       }
     }
   }
@@ -115,16 +128,35 @@ function ProjectGrid() {
               {project.videoUrl ? (
                 <>
                   <video
-                    ref={(el) => (videoRefs.current[project.id] = el)}
+                    ref={(el) => {
+                      videoRefs.current[project.id] = el
+                      // Ensure video is ready when mounted
+                      if (el && !isMobile()) {
+                        el.muted = true
+                        // Preload video data for smoother playback
+                        if (el.readyState === 0) {
+                          el.load()
+                        }
+                      }
+                    }}
                     src={project.videoUrl}
                     muted={!isMobile() || playingVideoId !== project.id}
                     loop={!isMobile() || playingVideoId !== project.id}
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     controls={isMobile() && playingVideoId === project.id}
                     className="project-video"
                     aria-hidden={!isMobile() || playingVideoId !== project.id}
                     aria-label={isMobile() && playingVideoId === project.id ? `וידאו של ${project.title}` : undefined}
+                    onLoadedData={(e) => {
+                      // Ensure video is ready to play
+                      const video = e.target
+                      if (!isMobile() && hoveredVideo === project.id && video.paused) {
+                        video.play().catch(() => {
+                          // Silently handle autoplay prevention
+                        })
+                      }
+                    }}
                     onEnded={() => {
                       if (isMobile() && playingVideoId === project.id) {
                         setPlayingVideoId(null)
