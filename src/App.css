@@ -979,6 +979,12 @@
   height: 100%;
   object-fit: cover;
   max-width: 100%;
+  transition: opacity 0.3s ease;
+}
+
+/* Smooth transition when video starts playing */
+.project-image-placeholder.playing .project-video-thumbnail {
+  opacity: 1;
 }
 
 .project-image-placeholder img {
@@ -1599,40 +1605,20 @@
     opacity: 1 !important;
   }
 
-  /* Show play button on mobile for project images - hide when playing */
-  .project-image-placeholder.has-video:not(.playing)::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 4rem;
-    height: 4rem;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 50%;
-    opacity: 0.8;
-    pointer-events: none;
-    z-index: 2;
+  /* Hide play button overlay on mobile - poster image should be seamless */
+  .project-image-placeholder.has-video::after,
+  .project-image-placeholder.has-video::before {
+    display: none !important;
   }
 
-  .project-image-placeholder.has-video:not(.playing)::before {
-    content: '▶';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 1.5rem;
-    opacity: 0.8;
-    pointer-events: none;
-    z-index: 3;
-    margin-left: 0.2rem;
+  /* Ensure video poster blends seamlessly - no visual indicators */
+  .project-image-placeholder.has-video video {
+    cursor: pointer;
   }
 
-  /* Hide play button when video is playing */
-  .project-image-placeholder.has-video.playing::after,
-  .project-image-placeholder.has-video.playing::before {
-    display: none;
+  /* Smooth transition when video starts playing */
+  .project-image-placeholder.has-video.playing video {
+    opacity: 1;
   }
 
   .services-grid {

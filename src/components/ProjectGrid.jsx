@@ -65,21 +65,25 @@ function ProjectGrid() {
     if (videoUrl) {
       // On mobile, play inline instead of opening modal
       if (isMobile()) {
-        // If video already has controls, let the overlay handle clicks
-        if (playingVideoId === projectId) {
-          return
-        }
         const videoElement = videoRefs.current[projectId]
         if (videoElement) {
-          // Pause any currently playing video
-          if (playingVideoId && videoRefs.current[playingVideoId]) {
-            videoRefs.current[playingVideoId].pause()
-            setPlayingVideoId(null)
+          // If video is paused (showing poster), play it immediately
+          if (videoElement.paused) {
+            // Pause any currently playing video
+            if (playingVideoId && videoRefs.current[playingVideoId]) {
+              videoRefs.current[playingVideoId].pause()
+              setPlayingVideoId(null)
+            }
+            // Play the clicked video
+            videoElement.muted = false // Unmute for user-initiated playback
+            videoElement.play().then(() => {
+              setPlayingVideoId(projectId)
+            }).catch(() => {
+              // If play fails, still show controls
+              setPlayingVideoId(projectId)
+            })
           }
-          // Play the clicked video
-          videoElement.muted = false // Unmute for user-initiated playback
-          videoElement.play()
-          setPlayingVideoId(projectId)
+          // If video is already playing and has controls, let overlay handle it
         }
       } else {
         // On desktop, open modal
@@ -115,9 +119,14 @@ function ProjectGrid() {
             <div 
               className={`project-video-placeholder ${project.videoUrl ? 'has-video' : ''} ${playingVideoId === project.id ? 'playing' : ''}`}
               onClick={() => {
-                // Only handle click if video is not playing (to start playback)
-                if (!isMobile() || playingVideoId !== project.id) {
-                  handleVideoClick(project.videoUrl, project.title, project.id)
+                if (project.videoUrl) {
+                  if (isMobile()) {
+                    // On mobile, always handle click to play video
+                    handleVideoClick(project.videoUrl, project.title, project.id)
+                  } else {
+                    // On desktop, open modal
+                    handleVideoClick(project.videoUrl, project.title, project.id)
+                  }
                 }
               }}
               onKeyDown={(e) => handleVideoKeyDown(e, project.videoUrl, project.title, project.id)}
@@ -186,14 +195,47 @@ function ProjectGrid() {
                     }}
                     onEnded={() => {
                       if (isMobile() && playingVideoId === project.id) {
+                        const video = videoRefs.current[project.id]
+                        if (video) {
+                          // Restore poster when video ends
+                          video.poster = project.posterUrl || posterDataUrls.current[project.id] || ''
+                        }
                         setPlayingVideoId(null)
                       }
                     }}
+                    onPause={() => {
+                      // Restore poster when video is paused (for better UX)
+                      const video = videoRefs.current[project.id]
+                      if (video && isMobile() && playingVideoId !== project.id) {
+                        video.poster = project.posterUrl || posterDataUrls.current[project.id] || ''
+                      }
+                    }}
                     onClick={(e) => {
-                      // Prevent default video click behavior when controls are shown
-                      if (isMobile() && playingVideoId === project.id) {
-                        e.preventDefault()
-                        e.stopPropagation()
+                      // On mobile, if video is paused (showing poster), play it
+                      if (isMobile()) {
+                        const video = e.target
+                        if (video.paused) {
+                          e.stopPropagation()
+                          handleVideoClick(project.videoUrl, project.title, project.id)
+                        } else {
+                          // If playing, prevent default to let overlay handle it
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }
+                      }
+                    }}
+                    onPlay={() => {
+                      // Hide poster when video starts playing
+                      const video = videoRefs.current[project.id]
+                      if (video && isMobile()) {
+                        video.poster = '' // Remove poster when playing
+                      }
+                    }}
+                    onWaiting={() => {
+                      // Show poster again if video is buffering (optional - for better UX)
+                      const video = videoRefs.current[project.id]
+                      if (video && isMobile() && video.paused) {
+                        video.poster = project.posterUrl || posterDataUrls.current[project.id] || ''
                       }
                     }}
                   />
