@@ -32,8 +32,6 @@
   justify-content: space-between;
   gap: 2rem;
   padding: 1.35rem clamp(1.5rem, 4vw, 3rem);
-  position: sticky;
-  top: 0;
   background: rgba(241, 245, 249, 0.94);
   backdrop-filter: blur(16px);
   border-bottom: 2px solid rgba(26, 31, 46, 0.15);
@@ -1321,14 +1319,20 @@
     object-fit: cover !important;
   }
 
-  /* Show play button overlay on mobile (touch devices) */
-  .project-video-placeholder:has(video)::after,
-  .project-video-placeholder:has(video)::before {
+  /* Show play button overlay on mobile (touch devices) - hide when playing */
+  .project-video-placeholder:has(video):not(.playing)::after,
+  .project-video-placeholder:has(video):not(.playing)::before {
     opacity: 0.8;
   }
 
+  /* Hide play button when video is playing */
+  .project-video-placeholder.has-video.playing::after,
+  .project-video-placeholder.has-video.playing::before {
+    display: none;
+  }
+
   /* Fallback for browsers that don't support :has() */
-  .project-video-placeholder.has-video::after {
+  .project-video-placeholder.has-video:not(.playing)::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -1343,7 +1347,7 @@
     z-index: 2;
   }
 
-  .project-video-placeholder.has-video::before {
+  .project-video-placeholder.has-video:not(.playing)::before {
     content: '▶';
     position: absolute;
     top: 50%;
@@ -1355,6 +1359,19 @@
     pointer-events: none;
     z-index: 3;
     margin-left: 0.2rem;
+  }
+
+  /* Styles for playing video with controls on mobile */
+  .project-video-placeholder.playing video,
+  .project-image-placeholder.playing video {
+    position: relative !important;
+    object-fit: contain !important;
+    z-index: 1;
+  }
+
+  .project-video-placeholder.playing video[controls],
+  .project-image-placeholder.playing video[controls] {
+    background: #000;
   }
 }
 
@@ -1582,8 +1599,8 @@
     opacity: 1 !important;
   }
 
-  /* Show play button on mobile for project images */
-  .project-image-placeholder.has-video::after {
+  /* Show play button on mobile for project images - hide when playing */
+  .project-image-placeholder.has-video:not(.playing)::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -1598,7 +1615,7 @@
     z-index: 2;
   }
 
-  .project-image-placeholder.has-video::before {
+  .project-image-placeholder.has-video:not(.playing)::before {
     content: '▶';
     position: absolute;
     top: 50%;
@@ -1610,6 +1627,12 @@
     pointer-events: none;
     z-index: 3;
     margin-left: 0.2rem;
+  }
+
+  /* Hide play button when video is playing */
+  .project-image-placeholder.has-video.playing::after,
+  .project-image-placeholder.has-video.playing::before {
+    display: none;
   }
 
   .services-grid {

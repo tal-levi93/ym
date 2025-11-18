@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import '../App.css'
 import SEO from '../components/SEO'
 import { getOrganizationStructuredData } from '../utils/structuredData'
@@ -12,11 +12,39 @@ function Projects() {
   const allProjects = projectsData
   const [selectedVideo, setSelectedVideo] = useState(null)
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(null)
+  const [playingVideoId, setPlayingVideoId] = useState(null)
+  const videoRefs = useRef({})
 
-  const handleVideoClick = (videoUrl, projectTitle) => {
+  // Check if device is mobile/responsive
+  const isMobile = () => {
+    return typeof window !== 'undefined' && window.innerWidth <= 900
+  }
+
+  const handleVideoClick = (videoUrl, projectTitle, projectId) => {
     if (videoUrl) {
-      setSelectedVideo(videoUrl)
-      setSelectedProjectTitle(projectTitle)
+      // On mobile, play inline instead of opening modal
+      if (isMobile()) {
+        // If video already has controls, let the overlay handle clicks
+        if (playingVideoId === projectId) {
+          return
+        }
+        const videoElement = videoRefs.current[projectId]
+        if (videoElement) {
+          // Pause any currently playing video
+          if (playingVideoId && videoRefs.current[playingVideoId]) {
+            videoRefs.current[playingVideoId].pause()
+            setPlayingVideoId(null)
+          }
+          // Play the clicked video
+          videoElement.muted = false // Unmute for user-initiated playback
+          videoElement.play()
+          setPlayingVideoId(projectId)
+        }
+      } else {
+        // On desktop, open modal
+        setSelectedVideo(videoUrl)
+        setSelectedProjectTitle(projectTitle)
+      }
     }
   }
 
@@ -48,29 +76,82 @@ function Projects() {
           {allProjects.map((project) => (
             <article key={project.id} className="project-card-full" role="listitem">
               <div 
-                className={`project-image-placeholder ${project.videoUrl ? 'has-video' : ''}`}
-                onClick={() => handleVideoClick(project.videoUrl, project.title)}
+                className={`project-image-placeholder ${project.videoUrl ? 'has-video' : ''} ${playingVideoId === project.id ? 'playing' : ''}`}
+                onClick={() => {
+                  // Only handle click if video is not playing (to start playback)
+                  if (!isMobile() || playingVideoId !== project.id) {
+                    handleVideoClick(project.videoUrl, project.title, project.id)
+                  }
+                }}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && project.videoUrl) {
                     e.preventDefault()
-                    handleVideoClick(project.videoUrl, project.title)
+                    handleVideoClick(project.videoUrl, project.title, project.id)
                   }
                 }}
                 style={{ cursor: project.videoUrl ? 'pointer' : 'default' }}
                 role={project.videoUrl ? 'button' : undefined}
                 tabIndex={project.videoUrl ? 0 : -1}
-                aria-label={project.videoUrl ? `פתח וידאו של ${project.title}` : undefined}
+                aria-label={project.videoUrl ? (isMobile() ? `נגן וידאו של ${project.title}` : `פתח וידאו של ${project.title}`) : undefined}
               >
                 {project.videoUrl ? (
-                  <video
-                    src={project.videoUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    className="project-video-thumbnail"
-                    aria-hidden="true"
-                  />
+                  <>
+                    <video
+                      ref={(el) => (videoRefs.current[project.id] = el)}
+                      src={project.videoUrl}
+                      muted={!isMobile() || playingVideoId !== project.id}
+                      loop={!isMobile() || playingVideoId !== project.id}
+                      playsInline
+                      preload="metadata"
+                      controls={isMobile() && playingVideoId === project.id}
+                      className="project-video-thumbnail"
+                      aria-hidden={!isMobile() || playingVideoId !== project.id}
+                      aria-label={isMobile() && playingVideoId === project.id ? `וידאו של ${project.title}` : undefined}
+                      onEnded={() => {
+                        if (isMobile() && playingVideoId === project.id) {
+                          setPlayingVideoId(null)
+                        }
+                      }}
+                      onClick={(e) => {
+                        // Prevent default video click behavior when controls are shown
+                        if (isMobile() && playingVideoId === project.id) {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }
+                      }}
+                    />
+                    {/* Overlay to capture clicks on video area (top 80%) - toggle play/pause */}
+                    {isMobile() && playingVideoId === project.id && (
+                      <div
+                        className="video-click-overlay"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                          const videoElement = videoRefs.current[project.id]
+                          if (videoElement) {
+                            if (videoElement.paused) {
+                              // If paused, play it
+                              videoElement.play()
+                            } else {
+                              // If playing, pause it (keep controls visible)
+                              videoElement.pause()
+                            }
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: '20%', // Leave bottom 20% for controls
+                          zIndex: 1,
+                          cursor: 'pointer',
+                          pointerEvents: 'auto'
+                        }}
+                        aria-label={videoRefs.current[project.id]?.paused ? "נגן וידאו" : "השהה וידאו"}
+                      />
+                    )}
+                  </>
                 ) : project.image ? (
                   <img src={project.image} alt={`תמונת פרויקט: ${project.title}`} />
                 ) : (
@@ -102,12 +183,15 @@ function Projects() {
           ))}
         </div>
       </section>
-      <VideoModal
-        videoUrl={selectedVideo}
-        isOpen={!!selectedVideo}
-        onClose={handleCloseModal}
-        projectTitle={selectedProjectTitle}
-      />
+      {/* Only show modal on desktop (non-mobile) */}
+      {!isMobile() && (
+        <VideoModal
+          videoUrl={selectedVideo}
+          isOpen={!!selectedVideo}
+          onClose={handleCloseModal}
+          projectTitle={selectedProjectTitle}
+        />
+      )}
     </main>
     </>
   )

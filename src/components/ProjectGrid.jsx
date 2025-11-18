@@ -7,6 +7,7 @@ function ProjectGrid() {
   const [hoveredVideo, setHoveredVideo] = useState(null)
   const [selectedVideo, setSelectedVideo] = useState(null)
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(null)
+  const [playingVideoId, setPlayingVideoId] = useState(null)
   const videoRefs = useRef({})
 
   // Get featured projects (those with videos or marked as featured)
@@ -17,34 +18,66 @@ function ProjectGrid() {
     console.warn('No featured projects found')
   }
 
+  // Check if device is mobile/responsive
+  const isMobile = () => {
+    return typeof window !== 'undefined' && window.innerWidth <= 900
+  }
+
   const handleMouseEnter = (id) => {
-    setHoveredVideo(id)
-    // Play video if it exists
-    if (videoRefs.current[id]) {
-      videoRefs.current[id].play()
+    // Only auto-play on hover for desktop (non-mobile)
+    if (!isMobile()) {
+      setHoveredVideo(id)
+      // Play video if it exists
+      if (videoRefs.current[id]) {
+        videoRefs.current[id].play()
+      }
     }
   }
 
   const handleMouseLeave = (id) => {
-    setHoveredVideo(null)
-    // Stop and reset video if it exists
-    if (videoRefs.current[id]) {
-      videoRefs.current[id].pause()
-      videoRefs.current[id].currentTime = 0
+    // Only auto-pause on hover for desktop (non-mobile)
+    if (!isMobile()) {
+      setHoveredVideo(null)
+      // Stop and reset video if it exists
+      if (videoRefs.current[id] && playingVideoId !== id) {
+        videoRefs.current[id].pause()
+        videoRefs.current[id].currentTime = 0
+      }
     }
   }
 
-  const handleVideoClick = (videoUrl, projectTitle) => {
+  const handleVideoClick = (videoUrl, projectTitle, projectId) => {
     if (videoUrl) {
-      setSelectedVideo(videoUrl)
-      setSelectedProjectTitle(projectTitle)
+      // On mobile, play inline instead of opening modal
+      if (isMobile()) {
+        // If video already has controls, let the overlay handle clicks
+        if (playingVideoId === projectId) {
+          return
+        }
+        const videoElement = videoRefs.current[projectId]
+        if (videoElement) {
+          // Pause any currently playing video
+          if (playingVideoId && videoRefs.current[playingVideoId]) {
+            videoRefs.current[playingVideoId].pause()
+            setPlayingVideoId(null)
+          }
+          // Play the clicked video
+          videoElement.muted = false // Unmute for user-initiated playback
+          videoElement.play()
+          setPlayingVideoId(projectId)
+        }
+      } else {
+        // On desktop, open modal
+        setSelectedVideo(videoUrl)
+        setSelectedProjectTitle(projectTitle)
+      }
     }
   }
 
-  const handleVideoKeyDown = (e, videoUrl, projectTitle) => {
+  const handleVideoKeyDown = (e, videoUrl, projectTitle, projectId) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      handleVideoClick(videoUrl, projectTitle)
+      handleVideoClick(videoUrl, projectTitle, projectId)
     }
   }
 
@@ -65,26 +98,78 @@ function ProjectGrid() {
             role="listitem"
           >
             <div 
-              className={`project-video-placeholder ${project.videoUrl ? 'has-video' : ''}`}
-              onClick={() => handleVideoClick(project.videoUrl, project.title)}
-              onKeyDown={(e) => handleVideoKeyDown(e, project.videoUrl, project.title)}
+              className={`project-video-placeholder ${project.videoUrl ? 'has-video' : ''} ${playingVideoId === project.id ? 'playing' : ''}`}
+              onClick={() => {
+                // Only handle click if video is not playing (to start playback)
+                if (!isMobile() || playingVideoId !== project.id) {
+                  handleVideoClick(project.videoUrl, project.title, project.id)
+                }
+              }}
+              onKeyDown={(e) => handleVideoKeyDown(e, project.videoUrl, project.title, project.id)}
               style={{ cursor: project.videoUrl ? 'pointer' : 'default' }}
               role={project.videoUrl ? 'button' : undefined}
               tabIndex={project.videoUrl ? 0 : -1}
-              aria-label={project.videoUrl ? `פתח וידאו של ${project.title}` : undefined}
+              aria-label={project.videoUrl ? (isMobile() ? `נגן וידאו של ${project.title}` : `פתח וידאו של ${project.title}`) : undefined}
               aria-describedby={`project-${project.id}-description`}
             >
               {project.videoUrl ? (
-                <video
-                  ref={(el) => (videoRefs.current[project.id] = el)}
-                  src={project.videoUrl}
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="project-video"
-                  aria-hidden="true"
-                />
+                <>
+                  <video
+                    ref={(el) => (videoRefs.current[project.id] = el)}
+                    src={project.videoUrl}
+                    muted={!isMobile() || playingVideoId !== project.id}
+                    loop={!isMobile() || playingVideoId !== project.id}
+                    playsInline
+                    preload="metadata"
+                    controls={isMobile() && playingVideoId === project.id}
+                    className="project-video"
+                    aria-hidden={!isMobile() || playingVideoId !== project.id}
+                    aria-label={isMobile() && playingVideoId === project.id ? `וידאו של ${project.title}` : undefined}
+                    onEnded={() => {
+                      if (isMobile() && playingVideoId === project.id) {
+                        setPlayingVideoId(null)
+                      }
+                    }}
+                    onClick={(e) => {
+                      // Prevent default video click behavior when controls are shown
+                      if (isMobile() && playingVideoId === project.id) {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }
+                    }}
+                  />
+                  {/* Overlay to capture clicks on video area (top 80%) - toggle play/pause */}
+                  {isMobile() && playingVideoId === project.id && (
+                    <div
+                      className="video-click-overlay"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        e.preventDefault()
+                        const videoElement = videoRefs.current[project.id]
+                        if (videoElement) {
+                          if (videoElement.paused) {
+                            // If paused, play it
+                            videoElement.play()
+                          } else {
+                            // If playing, pause it (keep controls visible)
+                            videoElement.pause()
+                          }
+                        }
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: '20%', // Leave bottom 20% for controls
+                        zIndex: 1,
+                        cursor: 'pointer',
+                        pointerEvents: 'auto'
+                      }}
+                      aria-label={videoRefs.current[project.id]?.paused ? "נגן וידאו" : "השהה וידאו"}
+                    />
+                  )}
+                </>
               ) : (
                 <div className="video-placeholder-content">
                   <div className="video-placeholder-icon" aria-hidden="true">▶</div>
@@ -99,12 +184,15 @@ function ProjectGrid() {
           </article>
         ))}
       </div>
-      <VideoModal
-        videoUrl={selectedVideo}
-        isOpen={!!selectedVideo}
-        onClose={handleCloseModal}
-        projectTitle={selectedProjectTitle}
-      />
+      {/* Only show modal on desktop (non-mobile) */}
+      {!isMobile() && (
+        <VideoModal
+          videoUrl={selectedVideo}
+          isOpen={!!selectedVideo}
+          onClose={handleCloseModal}
+          projectTitle={selectedProjectTitle}
+        />
+      )}
     </>
   )
 }
