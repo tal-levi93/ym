@@ -44,6 +44,12 @@ body {
 
 main {
   display: block;
+  scroll-margin-top: 100px; /* Account for sticky header */
+}
+
+#main-content {
+  scroll-margin-top: 100px;
+  padding-top: 0;
 }
 
 img {
