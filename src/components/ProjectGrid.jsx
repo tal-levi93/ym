@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import '../App.css'
 import { getFeaturedProjects } from '../data/projects'
 import VideoModal from './VideoModal'
+import { captureVideoFrame } from '../utils/videoUtils'
 
 function ProjectGrid() {
   const [hoveredVideo, setHoveredVideo] = useState(null)
@@ -9,6 +10,7 @@ function ProjectGrid() {
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(null)
   const [playingVideoId, setPlayingVideoId] = useState(null)
   const videoRefs = useRef({})
+  const posterDataUrls = useRef({})
 
   // Get featured projects (those with videos or marked as featured)
   const projects = getFeaturedProjects()
@@ -138,8 +140,13 @@ function ProjectGrid() {
                           el.load()
                         }
                       }
+                      // Set cached poster if available
+                      if (el && posterDataUrls.current[project.id]) {
+                        el.poster = posterDataUrls.current[project.id]
+                      }
                     }}
                     src={project.videoUrl}
+                    poster={project.posterUrl || posterDataUrls.current[project.id] || undefined}
                     muted={!isMobile() || playingVideoId !== project.id}
                     loop={!isMobile() || playingVideoId !== project.id}
                     playsInline
@@ -148,9 +155,29 @@ function ProjectGrid() {
                     className="project-video"
                     aria-hidden={!isMobile() || playingVideoId !== project.id}
                     aria-label={isMobile() && playingVideoId === project.id ? `וידאו של ${project.title}` : undefined}
-                    onLoadedData={(e) => {
-                      // Ensure video is ready to play
+                    onLoadedData={async (e) => {
                       const video = e.target
+                      
+                      // Only capture programmatically if no manual poster is provided
+                      if (!project.posterUrl) {
+                        // Capture first frame if not already captured and video is paused
+                        if (video && video.paused && video.videoWidth > 0 && video.videoHeight > 0 && !posterDataUrls.current[project.id]) {
+                          // Use setTimeout to avoid blocking video loading
+                          setTimeout(async () => {
+                            try {
+                              const dataUrl = await captureVideoFrame(video)
+                              if (dataUrl && video.paused) {
+                                posterDataUrls.current[project.id] = dataUrl
+                                video.poster = dataUrl
+                              }
+                            } catch (error) {
+                              console.warn('Failed to capture poster:', error)
+                            }
+                          }, 500)
+                        }
+                      }
+                      
+                      // Ensure video is ready to play (for desktop hover)
                       if (!isMobile() && hoveredVideo === project.id && video.paused) {
                         video.play().catch(() => {
                           // Silently handle autoplay prevention

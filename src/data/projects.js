@@ -1,4 +1,9 @@
 // Shared projects data for use across components
+// 
+// For projects with videos, you can add a 'posterUrl' field with a Cloudinary image URL
+// This will be used as the video thumbnail/poster image (better than programmatic capture)
+// Example: posterUrl: 'https://res.cloudinary.com/dmmfnlasi/image/upload/v1234567890/poster-image.jpg'
+//
 export const projectsData = [
   {
     id: 1,
@@ -6,6 +11,7 @@ export const projectsData = [
     description: 'אתר תדמית מקצועי למספרה עם חנות מקוונת למוצרי טיפוח ותספורות. כולל מערכת הזמנות, גלריית עבודות, וניהול מוצרים',
     category: 'אתרים',
     videoUrl: 'https://res.cloudinary.com/dmmfnlasi/video/upload/v1762186648/Screen_Recording_2025-11-03_181151_wp1ums.mp4',
+    // posterUrl: 'https://res.cloudinary.com/dmmfnlasi/image/upload/v1762186648/poster-1.jpg', // Add this when you upload poster images
     technologies: ['React', 'Vite', 'E-commerce'],
     year: '2024',
     featured: true,

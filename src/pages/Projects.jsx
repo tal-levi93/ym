@@ -4,6 +4,7 @@ import SEO from '../components/SEO'
 import { getOrganizationStructuredData } from '../utils/structuredData'
 import { projectsData } from '../data/projects'
 import VideoModal from '../components/VideoModal'
+import { captureVideoFrame } from '../utils/videoUtils'
 
 function Projects() {
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
@@ -14,6 +15,7 @@ function Projects() {
   const [selectedProjectTitle, setSelectedProjectTitle] = useState(null)
   const [playingVideoId, setPlayingVideoId] = useState(null)
   const videoRefs = useRef({})
+  const posterDataUrls = useRef({})
 
   // Check if device is mobile/responsive
   const isMobile = () => {
@@ -97,8 +99,15 @@ function Projects() {
                 {project.videoUrl ? (
                   <>
                     <video
-                      ref={(el) => (videoRefs.current[project.id] = el)}
+                      ref={(el) => {
+                        videoRefs.current[project.id] = el
+                        // Set cached poster if available
+                        if (el && posterDataUrls.current[project.id]) {
+                          el.poster = posterDataUrls.current[project.id]
+                        }
+                      }}
                       src={project.videoUrl}
+                      poster={project.posterUrl || posterDataUrls.current[project.id] || undefined}
                       muted={!isMobile() || playingVideoId !== project.id}
                       loop={!isMobile() || playingVideoId !== project.id}
                       playsInline
@@ -107,6 +116,27 @@ function Projects() {
                       className="project-video-thumbnail"
                       aria-hidden={!isMobile() || playingVideoId !== project.id}
                       aria-label={isMobile() && playingVideoId === project.id ? `וידאו של ${project.title}` : undefined}
+                      onLoadedData={async (e) => {
+                        // Only capture programmatically if no manual poster is provided
+                        if (!project.posterUrl) {
+                          // Capture first frame if not already captured and video is paused
+                          const video = e.target
+                          if (video && video.paused && video.videoWidth > 0 && video.videoHeight > 0 && !posterDataUrls.current[project.id]) {
+                            // Use setTimeout to avoid blocking video loading
+                            setTimeout(async () => {
+                              try {
+                                const dataUrl = await captureVideoFrame(video)
+                                if (dataUrl && video.paused) {
+                                  posterDataUrls.current[project.id] = dataUrl
+                                  video.poster = dataUrl
+                                }
+                              } catch (error) {
+                                console.warn('Failed to capture poster:', error)
+                              }
+                            }, 500)
+                          }
+                        }
+                      }}
                       onEnded={() => {
                         if (isMobile() && playingVideoId === project.id) {
                           setPlayingVideoId(null)
