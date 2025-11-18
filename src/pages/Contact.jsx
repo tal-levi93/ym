@@ -3,8 +3,20 @@ import '../App.css'
 import SEO from '../components/SEO'
 import { getOrganizationStructuredData } from '../utils/structuredData'
 
+// Constants for debouncing and rate limiting
+const DEBOUNCE_DELAY = 30000 // 30 seconds between submissions
+const STORAGE_KEY = 'contact_form_last_submit'
+const MAX_LENGTHS = {
+  name: 100,
+  email: 255,
+  phone: 20,
+  businessName: 100,
+  message: 2000,
+}
+
 function Contact() {
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const webhookUrl = import.meta.env.VITE_WEBHOOK_URL
   
   const structuredData = getOrganizationStructuredData()
   
@@ -22,9 +34,13 @@ function Contact() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    // Enforce max length limits
+    const maxLength = MAX_LENGTHS[name]
+    const trimmedValue = maxLength ? value.slice(0, maxLength) : value
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: trimmedValue,
     }))
     // Clear error when user starts typing
     if (errors[name]) {
@@ -40,20 +56,63 @@ function Contact() {
 
     if (!formData.name.trim()) {
       newErrors.name = 'שדה חובה'
+    } else if (formData.name.length > MAX_LENGTHS.name) {
+      newErrors.name = `השם לא יכול להיות ארוך מ-${MAX_LENGTHS.name} תווים`
     }
 
     if (!formData.email.trim()) {
       newErrors.email = 'שדה חובה'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'כתובת אימייל לא תקינה'
+    } else if (formData.email.length > MAX_LENGTHS.email) {
+      newErrors.email = `כתובת האימייל לא יכולה להיות ארוכה מ-${MAX_LENGTHS.email} תווים`
     }
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'שדה חובה'
+    } else if (formData.phone.length > MAX_LENGTHS.phone) {
+      newErrors.phone = `מספר הטלפון לא יכול להיות ארוך מ-${MAX_LENGTHS.phone} תווים`
+    }
+
+    if (formData.businessName.length > MAX_LENGTHS.businessName) {
+      newErrors.businessName = `שם העסק לא יכול להיות ארוך מ-${MAX_LENGTHS.businessName} תווים`
+    }
+
+    if (formData.message.length > MAX_LENGTHS.message) {
+      newErrors.message = `ההודעה לא יכולה להיות ארוכה מ-${MAX_LENGTHS.message} תווים`
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  // Check if user can submit (debouncing with local storage)
+  const canSubmit = () => {
+    if (typeof window === 'undefined') return true
+    
+    const lastSubmit = localStorage.getItem(STORAGE_KEY)
+    if (!lastSubmit) return true
+    
+    const lastSubmitTime = parseInt(lastSubmit, 10)
+    const now = Date.now()
+    const timeSinceLastSubmit = now - lastSubmitTime
+    
+    return timeSinceLastSubmit >= DEBOUNCE_DELAY
+  }
+
+  // Get remaining time until next submission is allowed
+  const getRemainingTime = () => {
+    if (typeof window === 'undefined') return 0
+    
+    const lastSubmit = localStorage.getItem(STORAGE_KEY)
+    if (!lastSubmit) return 0
+    
+    const lastSubmitTime = parseInt(lastSubmit, 10)
+    const now = Date.now()
+    const timeSinceLastSubmit = now - lastSubmitTime
+    const remaining = DEBOUNCE_DELAY - timeSinceLastSubmit
+    
+    return remaining > 0 ? Math.ceil(remaining / 1000) : 0
   }
 
   const announceToScreenReader = (message) => {
@@ -70,29 +129,49 @@ function Contact() {
     e.preventDefault()
     setSubmitError('')
     
+    // Check debouncing with local storage
+    if (!canSubmit()) {
+      const remainingSeconds = getRemainingTime()
+      const errorMessage = `אנא המתן ${remainingSeconds} שניות לפני שליחה נוספת`
+      setSubmitError(errorMessage)
+      announceToScreenReader(errorMessage)
+      return
+    }
+    
+    if (!webhookUrl) {
+      const errorMessage = 'שגיאת תצורה: כתובת ה-webhook לא הוגדרה'
+      setSubmitError(errorMessage)
+      console.error('VITE_WEBHOOK_URL is not defined')
+      return
+    }
+    
     if (validateForm()) {
       setIsSubmitting(true)
       announceToScreenReader('שולח את הטופס...')
       
       try {
-        const response = await fetch('https://hook.eu1.make.com/js7mnmelija472itsjkyxor78ykxbubm', {
+        const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            Lead: formData.name,
+            Lead: formData.name.trim(),
             Status: 'New lead',
-            Company: formData.businessName || '-',
-            Email: formData.email,
-            phone: formData.phone,
+            Company: formData.businessName.trim() || '-',
+            Email: formData.email.trim(),
+            phone: formData.phone.trim(),
             'Last interaction': new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Jerusalem' }),
             'Deal Value': '-',
-            Message: formData.message,
+            Message: formData.message.trim(),
           }),
         })
         
         if (response.ok) {
+          // Store submission time in local storage for debouncing
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, Date.now().toString())
+          }
           setIsSubmitted(true)
           announceToScreenReader('הטופס נשלח בהצלחה!')
         } else {
@@ -163,6 +242,7 @@ function Contact() {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="הזן את שמך"
+                maxLength={MAX_LENGTHS.name}
                 className={errors.name ? 'error' : ''}
                 aria-required="true"
                 aria-invalid={errors.name ? 'true' : 'false'}
@@ -186,6 +266,7 @@ function Contact() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="הזן את כתובת האימייל שלך"
+                maxLength={MAX_LENGTHS.email}
                 className={errors.email ? 'error' : ''}
                 aria-required="true"
                 aria-invalid={errors.email ? 'true' : 'false'}
@@ -210,6 +291,7 @@ function Contact() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="הזן את מספר הטלפון שלך"
+                maxLength={MAX_LENGTHS.phone}
                 className={errors.phone ? 'error' : ''}
                 aria-required="true"
                 aria-invalid={errors.phone ? 'true' : 'false'}
@@ -232,8 +314,16 @@ function Contact() {
                 value={formData.businessName}
                 onChange={handleChange}
                 placeholder="הזן את שם העסק"
+                maxLength={MAX_LENGTHS.businessName}
                 autoComplete="organization"
+                aria-invalid={errors.businessName ? 'true' : 'false'}
+                aria-describedby={errors.businessName ? 'businessName-error' : undefined}
               />
+              {errors.businessName && (
+                <span id="businessName-error" className="error-message" role="alert">
+                  {errors.businessName}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
@@ -245,6 +335,7 @@ function Contact() {
                 onChange={handleChange}
                 placeholder="כתוב את הודעתך כאן"
                 rows="6"
+                maxLength={MAX_LENGTHS.message}
                 className={errors.message ? 'error' : ''}
                 aria-invalid={errors.message ? 'true' : 'false'}
                 aria-describedby={errors.message ? 'message-error' : undefined}

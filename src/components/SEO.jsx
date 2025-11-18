@@ -92,7 +92,7 @@ function SEO({
     // Add new structured data (support both single object and array)
     if (structuredData) {
       const dataArray = Array.isArray(structuredData) ? structuredData : [structuredData]
-      dataArray.forEach((data, index) => {
+      dataArray.forEach((data) => {
         const script = document.createElement('script')
         script.setAttribute('type', 'application/ld+json')
         script.textContent = JSON.stringify(data)
