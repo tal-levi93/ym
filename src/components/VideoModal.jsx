@@ -7,6 +7,16 @@ function VideoModal({ videoUrl, isOpen, onClose, projectTitle }) {
   const closeButtonRef = useRef(null)
   const previousFocusRef = useRef(null)
 
+  const announceToScreenReader = (message) => {
+    const liveRegion = document.getElementById('aria-live-region')
+    if (liveRegion) {
+      liveRegion.textContent = message
+      setTimeout(() => {
+        liveRegion.textContent = ''
+      }, 1000)
+    }
+  }
+
   useEffect(() => {
     if (isOpen && videoRef.current) {
       videoRef.current.play()
@@ -118,8 +128,15 @@ function VideoModal({ videoUrl, isOpen, onClose, projectTitle }) {
             src={videoUrl}
             controls
             autoPlay
+            preload="metadata"
+            playsInline
             className="video-modal-video"
             aria-label={`וידאו של הפרויקט: ${projectTitle || 'פרויקט'}`}
+            onError={(e) => {
+              console.error('Video loading error:', e)
+              const errorMessage = 'שגיאה בטעינת הוידאו. אנא נסה לרענן את הדף.'
+              announceToScreenReader(errorMessage)
+            }}
           />
         </div>
       </div>
