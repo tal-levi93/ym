@@ -2,7 +2,7 @@
  * Structured Data (JSON-LD) helpers for SEO
  */
 
-const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com'
+const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.ymtech.dev'
 
 /**
  * Generate LocalBusiness structured data

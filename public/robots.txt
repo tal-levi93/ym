@@ -8,7 +8,7 @@ Allow: /
 # Disallow: /private/
 
 # Sitemap location
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://www.ymtech.dev/sitemap.xml
 
 # Crawl-delay (optional, adjust as needed)
 # Crawl-delay: 1
